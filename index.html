@@ -130,11 +130,35 @@ function beep(f, dur, type, vol, slide){
     o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + dur);
   } catch(e){}
 }
+/* noise engine for fire sounds (no assets) */
+let noiseBuf = null;
+function noise(dur, type, f0, f1, vol){
+  if (muted) return;
+  try {
+    const a = ac();
+    if (!noiseBuf){
+      noiseBuf = a.createBuffer(1, a.sampleRate * 2, a.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const src = a.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const flt = a.createBiquadFilter(); flt.type = type; flt.frequency.value = f0; flt.Q.value = 1.2;
+    if (f1) flt.frequency.exponentialRampToValueAtTime(f1, a.currentTime + dur);
+    const g = a.createGain(); g.gain.value = vol;
+    g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + dur);
+    src.connect(flt); flt.connect(g); g.connect(a.destination);
+    src.start(); src.stop(a.currentTime + dur);
+  } catch(e){}
+}
 const sfx = {
-  flap(){ beep(220, .09, 'triangle', .05, 300); },
-  near(c){ beep(660 + c*80, .12, 'sine', .09, 880 + c*80); },
-  gate(){ beep(380, .07, 'square', .03, 460); },
-  die(){ beep(150, .5, 'sawtooth', .14, 40); beep(85, .7, 'triangle', .1, 28); },
+  // tap = fire WHOOSH: airy band of noise sweeping up
+  flap(){ noise(.22, 'bandpass', 350, 1400, .22); },
+  // graze = PSST: fire hit by water — bright hiss dropping fast + a spark ping
+  near(c){ noise(.28, 'highpass', 4200, 1200, .30); beep(900 + c*90, .08, 'sine', .05, 1400); },
+  gate(){ beep(380, .06, 'square', .022, 460); },
+  // death = EXPLOSION: deep boom + rumble + debris hiss
+  die(){ noise(.9, 'lowpass', 900, 60, .55); beep(70, .8, 'sine', .3, 24);
+         setTimeout(()=>noise(.6, 'highpass', 2500, 500, .12), 60); },
   best(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.18,'sine',.1),i*90)); }
 };
 const muteBtn = document.getElementById('mute');
@@ -152,21 +176,21 @@ let bonePattern = null;
 let tutStep = -1, tutT = 0;      // -1 off · 0 hold · 1 release · 2 graze tip · 3 done
 
 // 2026-07-09 Eric feel pass: old values were floaty — couldn't react at speed.
-const G = () => H * 2.7;        // fall fast when released
-const THRUST = () => H * -4.8;  // punchy rise on hold
+const G = () => H * 2.3;        // fall fast when released
+const THRUST = () => H * -4.2;  // punchy rise on hold
 const PX = () => W * 0.26;
 
 /* -------- difficulty curve (2026-07-09 retune: gentle on-ramp) --------
    speed: starts slow, ramps with distance.  gaps: wide early, tighten late.
    spacing: generous early. movers only after gate 14. */
-const SPEED0 = () => W * .0010;                 // slow cruise at launch
+const SPEED0 = () => W * .00085;                // slow cruise at launch
 const SPEEDCAP = () => W * .0026;               // max momentum (~2.6x start)
 /* BUGFIX 2026-07-09: old ramp was x1000 too strong (grew ~11x base speed PER SECOND —
    the "way too fast" complaint). Now speed doubles after ~50s of surviving. */
 const SPEEDRAMP = () => W * .00002;
 function gapFrac(i){ return Math.max(.18, .38 - i * .006); }           // .38 → .18, slower squeeze
 function spacingFrac(i){ return Math.max(.52, .90 - i * .006); }       // .90 → .52 (roomy)
-function moverChance(i){ return i < 14 ? 0 : Math.min(.32, (i-14) * .02); }
+function moverChance(i){ return i < 22 ? 0 : Math.min(.28, (i-22) * .015); }
 
 function buildBg(){
   bgSeeds = [];
