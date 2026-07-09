@@ -3,40 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Ember Drift — everyone flies the same canyon today</title>
-<meta name="description" content="One button. A living firestorm canyon. Everyone on Earth flies the identical course today — beat your friends' scores before it resets.">
+<title>Skull Drift — everyone rides the same catacomb today</title>
+<meta name="description" content="One button. A flaming skull hurtling through an endless ossuary. Everyone on Earth rides the identical catacomb today — beat your friends before midnight resets it.">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  html,body { width:100%; height:100%; overflow:hidden; background:#0a0508; touch-action:none;
+  html,body { width:100%; height:100%; overflow:hidden; background:#0b0a0d; touch-action:none;
               font-family:'Segoe UI', system-ui, sans-serif; user-select:none; -webkit-user-select:none; }
   #game { display:block; width:100vw; height:100vh; }
-  .ui { position:fixed; color:#ffd9a0; text-shadow:0 0 12px #ff6a00, 0 0 30px #ff3300; z-index:5; }
+  .ui { position:fixed; color:#e8dcc0; text-shadow:0 0 12px #ff8a00, 0 0 30px #c93400; z-index:5; }
   #hud { top:12px; left:16px; font-size:clamp(18px,3vw,28px); font-weight:700; letter-spacing:1px; }
   #combo { top:12px; left:50%; transform:translateX(-50%); font-size:clamp(14px,2.4vw,22px);
            opacity:0; transition:opacity .2s; font-weight:600; color:#ffe9c0; }
   #mute { top:10px; right:14px; font-size:clamp(20px,3vw,26px); cursor:pointer; opacity:.85; padding:6px 10px;
-          background:rgba(30,10,5,.45); border:1px solid rgba(255,120,40,.35); border-radius:10px; backdrop-filter:blur(4px); }
+          background:rgba(20,16,14,.5); border:1px solid rgba(230,200,140,.3); border-radius:10px; backdrop-filter:blur(4px); }
   #overlay { inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-             background:radial-gradient(ellipse at center, rgba(20,6,2,.55) 0%, rgba(5,2,1,.88) 100%); text-align:center; padding:20px; }
-  #overlay h1 { font-size:clamp(38px,9vw,84px); font-weight:900; letter-spacing:4px; color:#ffedd0;
-                text-shadow:0 0 18px #ff7a00, 0 0 60px #ff3c00, 0 0 120px #b31c00; margin-bottom:6px; }
-  #overlay .tag { font-size:clamp(13px,2.4vw,18px); color:#ffb877; margin-bottom:22px; letter-spacing:1px; }
+             background:radial-gradient(ellipse at center, rgba(18,12,16,.55) 0%, rgba(6,4,7,.9) 100%); text-align:center; padding:20px; }
+  #overlay h1 { font-size:clamp(38px,9vw,84px); font-weight:900; letter-spacing:5px; color:#f2e7cd;
+                text-shadow:0 0 18px #ff8a00, 0 0 60px #d13c00, 0 0 120px #6e1400; margin-bottom:6px; }
+  #overlay .tag { font-size:clamp(13px,2.4vw,18px); color:#cbb488; margin-bottom:22px; letter-spacing:1px; }
   #overlay .big { font-size:clamp(20px,4vw,34px); margin:4px 0; font-weight:700; }
   #overlay .stats { display:flex; gap:26px; margin:14px 0 8px; flex-wrap:wrap; justify-content:center; }
-  #overlay .stat { background:rgba(40,14,4,.55); border:1px solid rgba(255,130,40,.3); border-radius:14px;
+  #overlay .stat { background:rgba(30,24,20,.6); border:1px solid rgba(220,190,130,.25); border-radius:14px;
                    padding:10px 20px; min-width:110px; }
-  #overlay .stat .v { font-size:clamp(22px,4.4vw,36px); font-weight:800; color:#fff1dc; }
-  #overlay .stat .l { font-size:clamp(10px,1.7vw,13px); color:#ff9d5c; letter-spacing:2px; text-transform:uppercase; }
+  #overlay .stat .v { font-size:clamp(22px,4.4vw,36px); font-weight:800; color:#f6ecd7; }
+  #overlay .stat .l { font-size:clamp(10px,1.7vw,13px); color:#c9a86a; letter-spacing:2px; text-transform:uppercase; }
   #overlay .go { margin-top:18px; font-size:clamp(16px,3vw,24px); padding:14px 44px; border-radius:40px;
-                 background:linear-gradient(180deg,#ff8c1a,#e03500); color:#fff; border:none; cursor:pointer;
-                 font-weight:800; letter-spacing:2px; box-shadow:0 0 30px rgba(255,90,0,.6), inset 0 2px 0 rgba(255,255,255,.35); }
+                 background:linear-gradient(180deg,#ff9a2a,#c22e00); color:#fff; border:none; cursor:pointer;
+                 font-weight:800; letter-spacing:2px; box-shadow:0 0 30px rgba(255,110,0,.55), inset 0 2px 0 rgba(255,255,255,.35); }
   #overlay .go:active { transform:scale(.96); }
   #overlay .share { margin-top:12px; font-size:clamp(12px,2.2vw,16px); padding:9px 26px; border-radius:30px;
-                    background:rgba(50,18,6,.6); color:#ffcf9e; border:1px solid rgba(255,140,60,.45); cursor:pointer; letter-spacing:1px; }
-  #overlay .hint { margin-top:16px; font-size:clamp(11px,2vw,14px); color:#c97a45; }
-  #overlay .daily { margin-top:8px; font-size:clamp(11px,2vw,14px); color:#ffab66; }
-  #toast { bottom:9vh; left:50%; transform:translateX(-50%); background:rgba(40,14,4,.85); padding:10px 22px;
-           border-radius:24px; border:1px solid rgba(255,140,60,.5); font-size:14px; opacity:0; transition:opacity .3s; }
+                    background:rgba(34,26,22,.65); color:#eeD9a8; border:1px solid rgba(230,190,120,.4); cursor:pointer; letter-spacing:1px; }
+  #overlay .hint { margin-top:16px; font-size:clamp(11px,2vw,14px); color:#9b7f52; }
+  #overlay .daily { margin-top:8px; font-size:clamp(11px,2vw,14px); color:#d9a75f; }
+  #toast { bottom:9vh; left:50%; transform:translateX(-50%); background:rgba(30,22,18,.9); padding:10px 22px;
+           border-radius:24px; border:1px solid rgba(230,190,120,.5); font-size:14px; opacity:0; transition:opacity .3s; }
+  #tut { top:24vh; left:50%; transform:translateX(-50%); font-size:clamp(20px,4.4vw,38px); font-weight:800;
+         letter-spacing:2px; color:#fff3d9; opacity:0; transition:opacity .35s; text-align:center; }
   .hidden { display:none !important; }
 </style>
 </head>
@@ -46,10 +48,11 @@
 <div class="ui" id="combo"></div>
 <div class="ui" id="mute" title="mute">🔊</div>
 <div class="ui" id="toast"></div>
+<div class="ui" id="tut"></div>
 
 <div class="ui" id="overlay">
-  <h1>EMBER DRIFT</h1>
-  <div class="tag">Everyone on Earth flies the <b>same canyon</b> today. New canyon at midnight UTC.</div>
+  <h1>💀 SKULL DRIFT</h1>
+  <div class="tag">Everyone on Earth rides the <b>same catacomb</b> today. New bones at midnight UTC.</div>
   <div id="resultBlock" class="hidden">
     <div class="big" id="scoreLine"></div>
   </div>
@@ -58,71 +61,62 @@
     <div class="stat"><div class="v" id="stAll">0</div><div class="l">All-time</div></div>
     <div class="stat"><div class="v" id="stStreak">0🔥</div><div class="l">Day streak</div></div>
   </div>
-  <button class="go" id="btnGo">IGNITE</button>
+  <button class="go" id="btnGo">RIDE</button>
   <button class="share hidden" id="btnShare">⚡ Challenge a friend</button>
-  <div class="hint">HOLD to rise · release to fall · graze the rock for bonus embers</div>
+  <div class="hint">HOLD to rise · let go to drop · graze the bones for bonus embers</div>
   <div class="daily" id="daily"></div>
 </div>
 
 <script>
 "use strict";
 /* ============================================================
-   EMBER DRIFT — one-input daily-canyon arcade.
-   No backend. Daily seed = UTC date, so the whole world races
-   the identical course. localStorage keeps bests + streak.
+   SKULL DRIFT — one-input daily-catacomb arcade.
+   No backend. Daily seed = UTC date: whole world, same course.
    ============================================================ */
 const cv = document.getElementById('game'), cx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 function resize(){
-  DPR = Math.min(window.devicePixelRatio || 1, 1.25);   // perf: shadow-free renderer, low DPR
+  DPR = Math.min(window.devicePixelRatio || 1, 1.25);
   W = cv.width  = Math.floor(innerWidth  * DPR);
   H = cv.height = Math.floor(innerHeight * DPR);
   cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
+  bonePattern = null;   // rebuild at new scale
 }
-addEventListener('resize', resize); resize();
+addEventListener('resize', resize);
 
 /* ---------- daily seed ---------- */
 function utcDayKey(){ const d = new Date(); return d.getUTCFullYear()*10000 + (d.getUTCMonth()+1)*100 + d.getUTCDate(); }
 function mulberry32(a){ return function(){ a|=0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a>>>15, 1 | a);
   t = t + Math.imul(t ^ t>>>7, 61 | t) ^ t; return ((t ^ t>>>14) >>> 0) / 4294967296; }; }
-function msToReset(){ const n = new Date(); const nxt = Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+1);
-  return nxt - n.getTime(); }
+function msToReset(){ const n = new Date(); return Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+1) - n.getTime(); }
 
-/* ---------- persistence ---------- */
+/* ---------- persistence (sd_ keys) ---------- */
 const store = {
-  get k(){ return 'emberdrift_' + utcDayKey(); },
-  load(){
-    let all = +localStorage.ed_all || 0;
-    let today = +localStorage[this.k] || 0;
-    let streak = +localStorage.ed_streak || 0, last = +localStorage.ed_lastday || 0;
-    const dk = utcDayKey();
-    // streak: consecutive UTC days with at least one run
-    if (last !== dk && last !== dk - 1 && !(last && sameOrAdjacentDay(last, dk))) streak = last ? 0 : streak;
-    return { all, today, streak, last };
-  },
+  get k(){ return 'skulldrift_' + utcDayKey(); },
+  load(){ return { all: +localStorage.sd_all || 0, today: +localStorage[this.k] || 0,
+                   streak: +localStorage.sd_streak || 0 }; },
   save(score){
     const dk = utcDayKey();
-    const t = +localStorage[this.k] || 0;
-    if (score > t) localStorage[this.k] = score;
-    if (score > (+localStorage.ed_all || 0)) localStorage.ed_all = score;
-    const last = +localStorage.ed_lastday || 0;
-    let streak = +localStorage.ed_streak || 0;
-    if (last !== dk) { streak = adjacentDay(last, dk) ? streak + 1 : 1; localStorage.ed_streak = streak; localStorage.ed_lastday = dk; }
+    if (score > (+localStorage[this.k] || 0)) localStorage[this.k] = score;
+    if (score > (+localStorage.sd_all || 0)) localStorage.sd_all = score;
+    const last = +localStorage.sd_lastday || 0;
+    if (last !== dk){
+      localStorage.sd_streak = adjacentDay(last, dk) ? (+localStorage.sd_streak || 0) + 1 : 1;
+      localStorage.sd_lastday = dk;
+    }
   }
 };
 function adjacentDay(a, b){ if (!a) return false;
-  const pa = new Date(Date.UTC(Math.floor(a/10000), Math.floor(a/100)%100 - 1, a%100));
-  const pb = new Date(Date.UTC(Math.floor(b/10000), Math.floor(b/100)%100 - 1, b%100));
-  return (pb - pa) === 86400000; }
-function sameOrAdjacentDay(a,b){ return a === b || adjacentDay(a,b); }
+  const pa = Date.UTC(Math.floor(a/10000), Math.floor(a/100)%100 - 1, a%100);
+  const pb = Date.UTC(Math.floor(b/10000), Math.floor(b/100)%100 - 1, b%100);
+  return pb - pa === 86400000; }
 
 /* ---------- audio (synth, zero assets) ---------- */
-let AC = null, muted = localStorage.ed_mute === '1';
+let AC = null, muted = localStorage.sd_mute === '1';
 function ac(){ if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); return AC; }
 function beep(f, dur, type, vol, slide){
   if (muted) return;
-  try {
-    const a = ac(), o = a.createOscillator(), g = a.createGain();
+  try { const a = ac(), o = a.createOscillator(), g = a.createGain();
     o.type = type || 'sine'; o.frequency.value = f;
     if (slide) o.frequency.exponentialRampToValueAtTime(slide, a.currentTime + dur);
     g.gain.value = vol || .08; g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + dur);
@@ -130,68 +124,114 @@ function beep(f, dur, type, vol, slide){
   } catch(e){}
 }
 const sfx = {
-  flap(){ beep(240, .09, 'triangle', .05, 330); },
+  flap(){ beep(220, .09, 'triangle', .05, 300); },
   near(c){ beep(660 + c*80, .12, 'sine', .09, 880 + c*80); },
-  gate(){ beep(420, .07, 'square', .035, 500); },
-  die(){ beep(160, .5, 'sawtooth', .14, 40); beep(90, .7, 'triangle', .1, 30); },
+  gate(){ beep(380, .07, 'square', .03, 460); },
+  die(){ beep(150, .5, 'sawtooth', .14, 40); beep(85, .7, 'triangle', .1, 28); },
   best(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.18,'sine',.1),i*90)); }
 };
 const muteBtn = document.getElementById('mute');
 function drawMute(){ muteBtn.textContent = muted ? '🔇' : '🔊'; }
-muteBtn.onclick = (e)=>{ e.stopPropagation(); muted = !muted; localStorage.ed_mute = muted ? '1':'0'; drawMute(); };
+muteBtn.onclick = (e)=>{ e.stopPropagation(); muted = !muted; localStorage.sd_mute = muted ? '1':'0'; drawMute(); };
 drawMute();
 
 /* ---------- game state ---------- */
 const S = { MENU:0, PLAY:1, DEAD:2 };
 let state = S.MENU, holding = false;
-let px, py, vy, dist, speed, score, embers, combo, comboT, shake, slowmo, deadT;
-let gates = [], parts = [], pops = [], trail = [], bgSeeds = [];
-let rng = null, gateIdx = 0, lastScoreGate = -1;
+let px, py, vy, dist, speed, score, combo, comboT, shake, slowmo, deadT, runT;
+let gates = [], parts = [], pops = [], bgSeeds = [];
+let rng = null, gateIdx = 0;
+let bonePattern = null;
+let tutStep = -1, tutT = 0;      // -1 off · 0 hold · 1 release · 2 graze tip · 3 done
 
-const G = () => H * 1.55;           // gravity
-const THRUST = () => H * -2.6;      // hold force
-const PX = () => W * 0.26;          // player x
+const G = () => H * 1.35;
+const THRUST = () => H * -2.3;
+const PX = () => W * 0.26;
+
+/* -------- difficulty curve (2026-07-09 retune: gentle on-ramp) --------
+   speed: starts slow, ramps with distance.  gaps: wide early, tighten late.
+   spacing: generous early. movers only after gate 14. */
+const SPEED0 = () => W * .0014;
+const SPEEDRAMP = () => W * .000016;
+function gapFrac(i){ return Math.max(.165, .36 - i * .0075); }         // .36 → .165 by ~gate 26
+function spacingFrac(i){ return Math.max(.34, .58 - i * .008); }       // .58 → .34
+function moverChance(i){ return i < 14 ? 0 : Math.min(.32, (i-14) * .02); }
 
 function buildBg(){
   bgSeeds = [];
   const r = mulberry32(utcDayKey() ^ 0x5EED);
   for (let L = 0; L < 3; L++){
-    const n = 14 + L*8, arr = [];
-    for (let i = 0; i < n; i++) arr.push({ x: r(), h: .1 + r()*.32, w: .02 + r()*.05 });
+    const n = 12 + L*7, arr = [];
+    for (let i = 0; i < n; i++) arr.push({ x: r(), h: .08 + r()*.26, w: .03 + r()*.06, s: r() });
     bgSeeds.push(arr);
   }
 }
 
+function makeBonePattern(){
+  const s = Math.round(96 * DPR), c = document.createElement('canvas');
+  c.width = c.height = s;
+  const g = c.getContext('2d');
+  g.fillStyle = '#241a12'; g.fillRect(0,0,s,s);
+  const r = mulberry32(0xB0E5);
+  // crossed long bones
+  g.strokeStyle = '#8a7a5c'; g.lineCap = 'round';
+  for (let i = 0; i < 5; i++){
+    const x = r()*s, y = r()*s, a = r()*Math.PI, L = s*(.3 + r()*.3);
+    g.lineWidth = s*.055;
+    g.beginPath(); g.moveTo(x - Math.cos(a)*L/2, y - Math.sin(a)*L/2);
+    g.lineTo(x + Math.cos(a)*L/2, y + Math.sin(a)*L/2); g.stroke();
+    g.fillStyle = '#9a8a6a';
+    for (const e of [-1,1]){
+      g.beginPath(); g.arc(x + Math.cos(a)*L/2*e, y + Math.sin(a)*L/2*e, s*.045, 0, 7); g.fill();
+    }
+  }
+  // little skulls
+  for (let i = 0; i < 7; i++){
+    const x = r()*s, y = r()*s, k = s*(.06 + r()*.05);
+    g.fillStyle = '#b5a482';
+    g.beginPath(); g.arc(x, y, k, 0, 7); g.fill();                       // cranium
+    g.fillRect(x - k*.55, y + k*.5, k*1.1, k*.55);                       // jaw
+    g.fillStyle = '#1c130c';
+    g.beginPath(); g.arc(x - k*.4, y - k*.05, k*.26, 0, 7); g.fill();    // eyes
+    g.beginPath(); g.arc(x + k*.4, y - k*.05, k*.26, 0, 7); g.fill();
+    g.fillRect(x - k*.09, y + k*.25, k*.18, k*.3);                       // nasal
+  }
+  // grime
+  g.fillStyle = 'rgba(0,0,0,.22)';
+  for (let i = 0; i < 12; i++){ g.beginPath(); g.arc(r()*s, r()*s, s*(.03+r()*.08), 0, 7); g.fill(); }
+  return cx.createPattern(c, 'repeat');
+}
+
 function reset(){
   rng = mulberry32(utcDayKey());
-  gates = []; parts = []; pops = []; trail = [];
-  gateIdx = 0; lastScoreGate = -1;
+  gates = []; parts = []; pops = [];
+  gateIdx = 0;
   px = PX(); py = H * .45; vy = 0;
-  dist = 0; speed = W * .0022; score = 0; embers = 0; combo = 0; comboT = 0;
-  shake = 0; slowmo = 1; deadT = 0;
+  dist = 0; speed = SPEED0(); score = 0; combo = 0; comboT = 0;
+  shake = 0; slowmo = 1; deadT = 0; runT = 0;
+  tutStep = localStorage.sd_tut === '1' ? 3 : 0; tutT = 0;
   for (let i = 0; i < 6; i++) spawnGate();
 }
 
 function spawnGate(){
-  // deterministic course: every call pulls from the daily rng in order
   const i = gateIdx++;
-  const gapFrac = Math.max(.16, .30 - i * .0016);         // shrinks as you go
-  const gap = H * gapFrac;
-  const cMin = gap*.5 + H*.09, cMax = H - gap*.5 - H*.09;
+  const gap = H * gapFrac(i);
+  const cMin = gap*.5 + H*.10, cMax = H - gap*.5 - H*.10;
   const cy = cMin + rng() * (cMax - cMin);
-  const spacing = W * (.42 - Math.min(.14, i * .0025));
-  const x = gates.length ? gates[gates.length-1].x + spacing : W * 1.2;
-  const mode = i > 8 && rng() < Math.min(.35, .06 + i*.006) ? 1 : 0;  // 1 = drifting gate
-  const amp = mode ? H * (.05 + rng()*.09) : 0;
+  const spacing = W * spacingFrac(i);
+  // first pillar arrives late so new players get a long open glide
+  const x = gates.length ? gates[gates.length-1].x + spacing : W * 1.7;
+  const mode = rng() < moverChance(i) ? 1 : 0;
+  const amp = mode ? H * (.04 + rng()*.08) : 0;
   const ph = rng() * Math.PI * 2;
-  gates.push({ x, cy, gap, i, mode, amp, ph, w: Math.max(26, W*.030), scored:false, nearDone:false });
+  gates.push({ x, cy, gap, i, mode, amp, ph, w: Math.max(30, W*.034), scored:false, nearDone:false });
 }
 
 /* ---------- particles ---------- */
 function burst(x, y, n, col, sp){
   for (let i = 0; i < n; i++){
     const a = Math.random()*Math.PI*2, v = (Math.random()*.6+.4) * (sp || H*.6);
-    parts.push({ x, y, vx: Math.cos(a)*v, vy: Math.sin(a)*v, life: .5 + Math.random()*.6, t: 0, col, r: 2 + Math.random()*4 });
+    parts.push({ kind:0, x, y, vx: Math.cos(a)*v, vy: Math.sin(a)*v, life:.5+Math.random()*.6, t:0, col, r:2+Math.random()*4 });
   }
 }
 function pop(x, y, txt, col){ pops.push({ x, y, txt, col, t: 0 }); }
@@ -201,10 +241,10 @@ function down(e){
   if (e.target === muteBtn) return;
   if (e.type === 'keydown' && e.code !== 'Space' && e.code !== 'ArrowUp') return;
   if (e.type === 'keydown' && e.repeat) return;
-  if (state === S.PLAY){ holding = true; sfx.flap(); }
+  if (state === S.PLAY){ holding = true; sfx.flap(); if (tutStep === 0){ tutStep = 1; tutT = 0; } }
   e.preventDefault && e.cancelable && e.preventDefault();
 }
-function up(e){ holding = false; }
+function up(e){ holding = false; if (state === S.PLAY && tutStep === 1){ tutStep = 2; tutT = 0; } }
 addEventListener('keydown', down); addEventListener('keyup', up);
 addEventListener('mousedown', down); addEventListener('mouseup', up);
 addEventListener('touchstart', down, {passive:false}); addEventListener('touchend', up);
@@ -214,39 +254,35 @@ const overlay = document.getElementById('overlay'), btnGo = document.getElementB
       btnShare = document.getElementById('btnShare'), resultBlock = document.getElementById('resultBlock'),
       scoreLine = document.getElementById('scoreLine'), hud = document.getElementById('hud'),
       comboEl = document.getElementById('combo'), toast = document.getElementById('toast'),
-      dailyEl = document.getElementById('daily');
+      dailyEl = document.getElementById('daily'), tutEl = document.getElementById('tut');
 
-function fmtReset(){ const ms = msToReset(); const h = Math.floor(ms/3.6e6), m = Math.floor(ms%3.6e6/6e4);
-  return `New canyon in ${h}h ${m}m`; }
+function fmtReset(){ const ms = msToReset(); return `New catacomb in ${Math.floor(ms/3.6e6)}h ${Math.floor(ms%3.6e6/6e4)}m`; }
 function refreshMenu(died){
   const st = store.load();
   document.getElementById('stBest').textContent = st.today;
   document.getElementById('stAll').textContent = st.all;
-  document.getElementById('stStreak').textContent = (localStorage.ed_streak||0) + '🔥';
+  document.getElementById('stStreak').textContent = (localStorage.sd_streak||0) + '🔥';
   dailyEl.textContent = fmtReset();
   if (died){
     resultBlock.classList.remove('hidden'); btnShare.classList.remove('hidden');
     const isBest = score >= st.today && score > 0;
     scoreLine.innerHTML = `You scored <span style="color:#fff;font-size:1.3em">${score}</span>` +
       (isBest ? ' — 🏆 today\'s best!' : ` · today's best ${st.today}`);
-    btnGo.textContent = 'RUN IT BACK';
+    btnGo.textContent = 'RIDE AGAIN';
   }
 }
 function start(){
-  try { const a = ac(); a && a.resume && a.resume(); } catch(e){}   // audio must never block the game
+  try { const a = ac(); a && a.resume && a.resume(); } catch(e){}
   reset(); state = S.PLAY; overlay.classList.add('hidden'); hud.textContent = '0';
 }
-// bind press AND click so it fires on every browser/touch combo
 ['click','touchend'].forEach(ev => btnGo.addEventListener(ev, (e)=>{ e.stopPropagation(); e.preventDefault(); start(); }));
-// surface any runtime error on-screen instead of failing silently
 window.onerror = (msg)=>{ showToast('⚠ ' + msg); };
+
 btnShare.onclick = async (e)=>{
   e.stopPropagation();
-  const txt = `🔥 I scored ${score} on today's Ember Drift canyon — everyone flies the SAME course today. Beat me: ${location.href.split('?')[0]}`;
-  try {
-    if (navigator.share) await navigator.share({ text: txt });
-    else { await navigator.clipboard.writeText(txt); showToast('Challenge copied — paste it anywhere'); }
-  } catch(err){}
+  const txt = `💀 I scored ${score} on today's Skull Drift catacomb — everyone rides the SAME course today. Beat me: ${location.href.split('?')[0]}`;
+  try { if (navigator.share) await navigator.share({ text: txt });
+        else { await navigator.clipboard.writeText(txt); showToast('Challenge copied — paste it anywhere'); } } catch(err){}
 };
 function showToast(t){ toast.textContent = t; toast.style.opacity = 1; setTimeout(()=>toast.style.opacity = 0, 2200); }
 
@@ -254,7 +290,8 @@ function showToast(t){ toast.textContent = t; toast.style.opacity = 1; setTimeou
 function die(){
   state = S.DEAD; deadT = 0; slowmo = .25; shake = 22;
   sfx.die();
-  burst(px, py, 90, '#ff9a3c', H*.9); burst(px, py, 50, '#ffd9a0', H*.5); burst(px, py, 30, '#ff3c00', H*1.2);
+  burst(px, py, 80, '#ff9a3c', H*.9); burst(px, py, 45, '#e8dcc0', H*.6); burst(px, py, 30, '#ff3c00', H*1.2);
+  if (tutStep >= 2) localStorage.sd_tut = '1';
   const st = store.load();
   if (score > st.today && score > 0) setTimeout(()=>sfx.best(), 500);
   store.save(score);
@@ -267,71 +304,125 @@ function tick(t){
   const rawDt = Math.min(.033, (t - lastT)/1000 || .016); lastT = t;
   const dt = rawDt * slowmo;
 
-  if (state === S.PLAY || state === S.DEAD){
-    if (state === S.PLAY){
-      vy += (holding ? THRUST() : G()) * dt;
-      vy = Math.max(-H*1.1, Math.min(H*1.25, vy));
-      py += vy * dt;
-      speed += dt * W * .000045;            // slow ramp
-      dist += speed * dt * 1000;
+  if (state === S.PLAY){
+    runT += dt;
+    vy += (holding ? THRUST() : G()) * dt;
+    vy = Math.max(-H*1.05, Math.min(H*1.15, vy));
+    py += vy * dt;
+    speed += dt * SPEEDRAMP() * 1000;
+    dist += speed * dt * 1000;
 
-      trail.push({ x: px, y: py, t: 0 });
-      if (trail.length > 26) trail.shift();
+    // fire + smoke trail
+    if (Math.random() < .8) parts.push({ kind:1, x:px - H*.012, y:py + (Math.random()-.5)*H*.012,
+      vx:-speed*380 - H*.15, vy:(Math.random()-.5)*H*.1, life:.35+Math.random()*.25, t:0, r:(3+Math.random()*4) });
+    if (Math.random() < .45) parts.push({ kind:2, x:px - H*.02, y:py - H*.008,
+      vx:-speed*260 - H*.08, vy:-H*(.06+Math.random()*.08), life:.9+Math.random()*.7, t:0, r:(3+Math.random()*5) });
 
-      // scroll gates
-      const sc = speed * dt * 1000;
-      for (const g of gates) g.x -= sc;
-      if (gates[0] && gates[0].x < -W*.2){ gates.shift(); spawnGate(); }
+    const sc = speed * dt * 1000;
+    for (const g of gates) g.x -= sc;
+    if (gates[0] && gates[0].x < -W*.2){ gates.shift(); spawnGate(); }
 
-      // ceiling / floor lava
-      if (py < H*.03 + 6 || py > H*.97 - 6){ die(); }
+    if (py < H*.03 + 6 || py > H*.97 - 6){ die(); }
 
-      // gate logic
-      const pr = Math.max(10, H*.016);   // player radius
-      for (const g of gates){
-        const gy = g.mode ? g.cy + Math.sin(g.ph + t*.0016) * g.amp : g.cy;
-        const inX = Math.abs(g.x - px) < g.w*.5 + pr;
-        if (inX){
-          const topEdge = gy - g.gap*.5, botEdge = gy + g.gap*.5;
-          if (py - pr < topEdge || py + pr > botEdge){ die(); break; }
-          // near-miss check (once per gate)
-          if (!g.nearDone){
-            const d = Math.min(py - pr - topEdge, botEdge - (py + pr));
-            if (d < pr*1.6){
-              g.nearDone = true; combo++; comboT = 2;
-              const bonus = combo;
-              embers += bonus; score += bonus;
-              sfx.near(Math.min(combo,6));
-              burst(px, py + (py - gy > 0 ? pr : -pr), 14, '#ffe08a', H*.35);
-              pop(px, py - H*.05, `+${bonus} GRAZE${combo>1 ? ' x'+combo : ''}`, '#ffe08a');
-            }
+    const pr = Math.max(10, H*.016);
+    for (const g of gates){
+      const gy = g.mode ? g.cy + Math.sin(g.ph + t*.0016) * g.amp : g.cy;
+      g.gy = gy;
+      const inX = Math.abs(g.x - px) < g.w*.5 + pr;
+      if (inX){
+        const topEdge = gy - g.gap*.5, botEdge = gy + g.gap*.5;
+        if (py - pr < topEdge || py + pr > botEdge){ die(); break; }
+        if (!g.nearDone){
+          const d = Math.min(py - pr - topEdge, botEdge - (py + pr));
+          if (d < pr*1.6){
+            g.nearDone = true; combo++; comboT = 2;
+            const bonus = combo;
+            score += bonus;
+            sfx.near(Math.min(combo,6));
+            burst(px, py + (py - gy > 0 ? pr : -pr), 12, '#ffe08a', H*.35);
+            pop(px, py - H*.05, `+${bonus} GRAZE${combo>1 ? ' x'+combo : ''}`, '#ffe08a');
           }
         }
-        if (!g.scored && g.x + g.w*.5 < px - pr){
-          g.scored = true; score++; sfx.gate();
-          if (!g.nearDone){ combo = 0; }
-          hud.textContent = score;
-        }
       }
-      if (comboT > 0){ comboT -= dt; comboEl.style.opacity = 1;
-        comboEl.textContent = combo > 1 ? `🔥 GRAZE CHAIN x${combo}` : '✨ graze!';
-      } else comboEl.style.opacity = 0;
-    } else {
-      // dead: slow-mo out then menu
-      deadT += rawDt; slowmo = Math.min(1, slowmo + rawDt*.4);
-      if (deadT > 1.4){ state = S.MENU; overlay.classList.remove('hidden'); refreshMenu(true); }
+      if (!g.scored && g.x + g.w*.5 < px - pr){
+        g.scored = true; score++; sfx.gate();
+        if (!g.nearDone){ combo = 0; }
+        hud.textContent = score;
+      }
     }
-    for (const g of gates) if (g.mode) g.gy = g.cy + Math.sin(g.ph + t*.0016) * g.amp;
+    if (comboT > 0){ comboT -= dt; comboEl.style.opacity = 1;
+      comboEl.textContent = combo > 1 ? `🔥 GRAZE CHAIN x${combo}` : '✨ graze!';
+    } else comboEl.style.opacity = 0;
+
+    // tutorial text
+    tutT += dt;
+    if (tutStep === 0){ tutEl.style.opacity = 1; tutEl.textContent = '👇 HOLD to rise'; }
+    else if (tutStep === 1){ tutEl.style.opacity = 1; tutEl.textContent = '☝ Let go to drop'; }
+    else if (tutStep === 2){
+      tutEl.style.opacity = tutT < 2.6 ? 1 : 0;
+      tutEl.textContent = '💀 Graze the bones for bonus embers';
+      if (tutT > 3){ tutStep = 3; localStorage.sd_tut = '1'; }
+    } else tutEl.style.opacity = 0;
+  }
+  else if (state === S.DEAD){
+    deadT += rawDt; slowmo = Math.min(1, slowmo + rawDt*.4);
+    tutEl.style.opacity = 0;
+    if (deadT > 1.4){ state = S.MENU; overlay.classList.remove('hidden'); refreshMenu(true); }
   }
 
-  // particles / popups always update
   for (let i = parts.length-1; i >= 0; i--){ const p = parts[i]; p.t += dt;
-    p.x += p.vx*dt; p.y += p.vy*dt; p.vy += H*.9*dt; if (p.t > p.life) parts.splice(i,1); }
+    p.x += p.vx*dt; p.y += p.vy*dt;
+    if (p.kind === 0) p.vy += H*.9*dt;
+    if (p.kind === 2) p.vy -= H*.12*dt;         // smoke rises
+    if (p.t > p.life) parts.splice(i,1); }
   for (let i = pops.length-1; i >= 0; i--){ const p = pops[i]; p.t += dt; if (p.t > 1) pops.splice(i,1); }
-  for (const tr of trail) tr.t += dt;
   if (shake > 0) shake = Math.max(0, shake - rawDt*40);
 
   render(t);
+}
+
+/* ---------- skull (procedural, profile facing travel dir) ---------- */
+function drawSkull(x, y, r, ang){
+  cx.save();
+  cx.translate(x, y); cx.rotate(ang);
+  // fire aura
+  const fg = cx.createRadialGradient(-r*.6, 0, 0, -r*.6, 0, r*3);
+  fg.addColorStop(0, 'rgba(255,190,80,.55)'); fg.addColorStop(.5, 'rgba(255,90,10,.28)'); fg.addColorStop(1, 'rgba(255,60,0,0)');
+  cx.fillStyle = fg; cx.beginPath(); cx.arc(-r*.6, 0, r*3, 0, 7); cx.fill();
+  // flame licks behind the skull
+  cx.fillStyle = 'rgba(255,140,30,.85)';
+  for (let i = 0; i < 3; i++){
+    const fy = (i-1) * r*.55, fl = r*(1.6 + Math.sin(Date.now()*.02 + i*2.1)*.5);
+    cx.beginPath(); cx.moveTo(-r*.4, fy - r*.28); cx.quadraticCurveTo(-r - fl, fy, -r*.4, fy + r*.28); cx.fill();
+  }
+  cx.fillStyle = 'rgba(255,220,120,.9)';
+  cx.beginPath(); cx.moveTo(-r*.3, -r*.2); cx.quadraticCurveTo(-r*1.5, 0, -r*.3, r*.2); cx.fill();
+  // cranium (profile, facing +x)
+  cx.fillStyle = '#efe6cf';
+  cx.beginPath(); cx.arc(0, -r*.12, r*.95, Math.PI*.55, Math.PI*2.45); cx.fill();
+  // upper jaw / maxilla
+  cx.beginPath();
+  cx.moveTo(r*.2, r*.2); cx.quadraticCurveTo(r*1.15, r*.15, r*1.05, r*.55);
+  cx.lineTo(r*.15, r*.72); cx.closePath(); cx.fill();
+  // lower jaw
+  cx.fillStyle = '#ddd2b4';
+  cx.beginPath(); cx.moveTo(r*.05, r*.82); cx.lineTo(r*.95, r*.66); cx.lineTo(r*.85, r*.95);
+  cx.lineTo(r*.0, r*1.02); cx.closePath(); cx.fill();
+  // teeth
+  cx.fillStyle = '#fffbe9';
+  for (let i = 0; i < 4; i++){ cx.fillRect(r*(.3 + i*.18), r*.55, r*.1, r*.18); }
+  // eye socket + glow
+  cx.fillStyle = '#171017';
+  cx.beginPath(); cx.arc(r*.42, -r*.1, r*.34, 0, 7); cx.fill();
+  const eg = cx.createRadialGradient(r*.42, -r*.1, 0, r*.42, -r*.1, r*.3);
+  eg.addColorStop(0, 'rgba(255,170,40,.95)'); eg.addColorStop(1, 'rgba(255,60,0,0)');
+  cx.fillStyle = eg; cx.beginPath(); cx.arc(r*.42, -r*.1, r*.3, 0, 7); cx.fill();
+  // nasal notch + cheek shadow
+  cx.fillStyle = '#171017';
+  cx.beginPath(); cx.moveTo(r*.95, r*.28); cx.lineTo(r*.78, r*.05); cx.lineTo(r*.72, r*.34); cx.closePath(); cx.fill();
+  cx.fillStyle = 'rgba(90,70,40,.35)';
+  cx.beginPath(); cx.arc(r*.1, r*.3, r*.3, 0, 7); cx.fill();
+  cx.restore();
 }
 
 /* ---------- render ---------- */
@@ -339,82 +430,102 @@ function render(t){
   cx.save();
   if (shake > 0) cx.translate((Math.random()-.5)*shake*DPR, (Math.random()-.5)*shake*DPR);
 
-  // sky: deep ember gradient
+  // catacomb air: charcoal → deep umber, faint green underworld haze
   const bg = cx.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0, '#170608'); bg.addColorStop(.55, '#2b0a06'); bg.addColorStop(1, '#4a1204');
+  bg.addColorStop(0, '#0d0a11'); bg.addColorStop(.5, '#1c1414'); bg.addColorStop(1, '#2e2015');
   cx.fillStyle = bg; cx.fillRect(-40,-40,W+80,H+80);
 
-  // parallax silhouette ridges
-  const cols = ['#20070a', '#33100a', '#571b08'];
+  // parallax bone-mound silhouettes
+  const cols = ['#141017', '#221a16', '#3a2b1b'];
   bgSeeds.forEach((layer, L)=>{
     const sp = (dist * (L+1) * .04) / W;
     cx.fillStyle = cols[L];
     for (const m of layer){
       let mx = ((m.x - sp) % 1 + 1) % 1 * (W*1.2) - W*.1;
-      const mh = m.h * H, mw = m.w * W * (2.4 - L*.5);
-      cx.beginPath(); cx.moveTo(mx - mw, H); cx.lineTo(mx, H - mh - L*H*.07); cx.lineTo(mx + mw, H); cx.fill();
+      const mh = m.h * H, mw = m.w * W * (2.6 - L*.5);
+      // rounded mound
+      cx.beginPath(); cx.moveTo(mx - mw, H);
+      cx.quadraticCurveTo(mx, H - mh*2 - L*H*.05, mx + mw, H); cx.fill();
+      // skull dots studding the deeper mounds
+      if (L === 2 && m.s > .4){
+        cx.fillStyle = 'rgba(160,140,105,.28)';
+        cx.beginPath(); cx.arc(mx - mw*.2, H - mh*.9, H*.012, 0, 7); cx.fill();
+        cx.beginPath(); cx.arc(mx + mw*.25, H - mh*.55, H*.009, 0, 7); cx.fill();
+        cx.fillStyle = cols[L];
+      }
     }
   });
 
-  // floor lava + ceiling smoke
-  const lg = cx.createLinearGradient(0, H*.94, 0, H);
-  lg.addColorStop(0, 'rgba(255,90,10,0)'); lg.addColorStop(1, 'rgba(255,120,20,.85)');
-  cx.fillStyle = lg; cx.fillRect(0, H*.94, W, H*.06);
-  const tg = cx.createLinearGradient(0, 0, 0, H*.05);
-  tg.addColorStop(0, 'rgba(0,0,0,.8)'); tg.addColorStop(1, 'rgba(0,0,0,0)');
-  cx.fillStyle = tg; cx.fillRect(0, 0, W, H*.05);
+  // green-ember floor haze + ceiling gloom
+  const lg = cx.createLinearGradient(0, H*.92, 0, H);
+  lg.addColorStop(0, 'rgba(255,120,20,0)'); lg.addColorStop(1, 'rgba(255,130,30,.7)');
+  cx.fillStyle = lg; cx.fillRect(0, H*.92, W, H*.08);
+  const tg = cx.createLinearGradient(0, 0, 0, H*.06);
+  tg.addColorStop(0, 'rgba(0,0,0,.85)'); tg.addColorStop(1, 'rgba(0,0,0,0)');
+  cx.fillStyle = tg; cx.fillRect(0, 0, W, H*.06);
 
-  // gates: molten rock pillars with glow edge
+  // ossuary pillars (bone-pile pattern + amber rim glow, shadow-free)
+  if (!bonePattern) bonePattern = makeBonePattern();
   for (const g of gates){
-    const gy = (g.mode ? (g.gy ?? g.cy) : g.cy);
+    const gy = g.gy ?? g.cy;
     const topH = gy - g.gap*.5, botY = gy + g.gap*.5;
-    // NO shadowBlur here — it tanked weak GPUs to <1fps ("IGNITE does nothing" bug).
-    // Glow is faked with painted gradient rims instead.
-    const rock = cx.createLinearGradient(g.x - g.w, 0, g.x + g.w, 0);
-    rock.addColorStop(0, '#3a0d04'); rock.addColorStop(.5, '#7a2a08'); rock.addColorStop(1, '#2c0903');
-    cx.fillStyle = rock;
-    cx.fillRect(g.x - g.w*.5, -10, g.w, topH + 10);
-    cx.fillRect(g.x - g.w*.5, botY, g.w, H - botY + 10);
-    // faux-glow rims at the gap: hot core + soft gradient falloff
+    const x0 = g.x - g.w*.5;
+    cx.fillStyle = bonePattern;
+    cx.save(); cx.translate(g.x, 0);            // pattern anchors per-pillar so it doesn't swim
+    cx.fillRect(-g.w*.5, -10, g.w, topH + 10);
+    cx.fillRect(-g.w*.5, botY, g.w, H - botY + 10);
+    cx.restore();
+    // edge shading for depth
+    const es = cx.createLinearGradient(x0, 0, x0 + g.w, 0);
+    es.addColorStop(0, 'rgba(0,0,0,.45)'); es.addColorStop(.5, 'rgba(0,0,0,0)'); es.addColorStop(1, 'rgba(0,0,0,.45)');
+    cx.fillStyle = es;
+    cx.fillRect(x0, -10, g.w, topH + 10); cx.fillRect(x0, botY, g.w, H - botY + 10);
+    // faux-glow rims at the gap
     const rim = Math.max(3, 4*DPR), soft = rim*4;
     let gr = cx.createLinearGradient(0, topH - soft, 0, topH);
-    gr.addColorStop(0, 'rgba(255,140,40,0)'); gr.addColorStop(1, 'rgba(255,160,60,.55)');
-    cx.fillStyle = gr; cx.fillRect(g.x - g.w*.5, topH - soft, g.w, soft);
+    gr.addColorStop(0, 'rgba(255,150,50,0)'); gr.addColorStop(1, 'rgba(255,170,70,.5)');
+    cx.fillStyle = gr; cx.fillRect(x0, topH - soft, g.w, soft);
     gr = cx.createLinearGradient(0, botY, 0, botY + soft);
-    gr.addColorStop(0, 'rgba(255,160,60,.55)'); gr.addColorStop(1, 'rgba(255,140,40,0)');
-    cx.fillStyle = gr; cx.fillRect(g.x - g.w*.5, botY, g.w, soft);
-    cx.fillStyle = '#ffb340';
-    cx.fillRect(g.x - g.w*.5, topH - rim, g.w, rim);
-    cx.fillRect(g.x - g.w*.5, botY, g.w, rim);
+    gr.addColorStop(0, 'rgba(255,170,70,.5)'); gr.addColorStop(1, 'rgba(255,150,50,0)');
+    cx.fillStyle = gr; cx.fillRect(x0, botY, g.w, soft);
+    cx.fillStyle = '#ffcf7d';
+    cx.fillRect(x0, topH - rim, g.w, rim); cx.fillRect(x0, botY, g.w, rim);
+    // guardian skull at each rim tip
+    const ks = g.w*.34;
+    cx.fillStyle = '#cfc0a0';
+    cx.beginPath(); cx.arc(g.x, topH - rim - ks*.7, ks*.62, 0, 7); cx.fill();
+    cx.fillRect(g.x - ks*.34, topH - rim - ks*.4, ks*.68, ks*.36);
+    cx.fillStyle = '#191119';
+    cx.beginPath(); cx.arc(g.x - ks*.24, topH - rim - ks*.75, ks*.16, 0, 7); cx.fill();
+    cx.beginPath(); cx.arc(g.x + ks*.24, topH - rim - ks*.75, ks*.16, 0, 7); cx.fill();
+    cx.fillStyle = '#cfc0a0';
+    cx.beginPath(); cx.arc(g.x, botY + rim + ks*.7, ks*.62, 0, 7); cx.fill();
+    cx.fillStyle = '#191119';
+    cx.beginPath(); cx.arc(g.x - ks*.24, botY + rim + ks*.62, ks*.16, 0, 7); cx.fill();
+    cx.beginPath(); cx.arc(g.x + ks*.24, botY + rim + ks*.62, ks*.16, 0, 7); cx.fill();
   }
 
-  if (state !== S.MENU || score > 0){
-    // trail
-    for (let i = 0; i < trail.length; i++){
-      const tr = trail[i], a = i / trail.length;
-      cx.beginPath();
-      cx.fillStyle = `rgba(255,${140 + a*90|0},${40 + a*80|0},${a*.5})`;
-      cx.arc(tr.x - (trail.length - i) * speed*220, tr.y, Math.max(1, H*.012*a), 0, 7);
-      cx.fill();
-    }
-    // player ember orb
-    if (state === S.PLAY || (state === S.DEAD && deadT < .1)){
-      const pr = Math.max(10, H*.016);
-      // glow = wide radial gradient (cheap), no shadowBlur
-      const og = cx.createRadialGradient(px, py, 0, px, py, pr*2.6);
-      og.addColorStop(0, '#fff8e8'); og.addColorStop(.28, '#ffc65e'); og.addColorStop(1, 'rgba(255,90,10,0)');
-      cx.fillStyle = og; cx.beginPath(); cx.arc(px, py, pr*2.6, 0, 7); cx.fill();
-      cx.fillStyle = '#fff3d6'; cx.beginPath(); cx.arc(px, py, pr*.62, 0, 7); cx.fill();
-    }
-  }
-
-  // particles
+  // particles: 1 = fire trail, 2 = smoke, 0 = burst
   for (const p of parts){
     const a = 1 - p.t / p.life;
-    cx.globalAlpha = a; cx.fillStyle = p.col;
-    cx.beginPath(); cx.arc(p.x, p.y, p.r * DPR * a, 0, 7); cx.fill();
+    if (p.kind === 2){
+      cx.globalAlpha = a * .32;
+      cx.fillStyle = '#8d8d94';
+      cx.beginPath(); cx.arc(p.x, p.y, p.r * DPR * (1.6 - a*.6), 0, 7); cx.fill();
+    } else {
+      cx.globalAlpha = a;
+      cx.fillStyle = p.kind === 1 ? (a > .55 ? '#ffd873' : '#ff7a1e') : p.col;
+      cx.beginPath(); cx.arc(p.x, p.y, p.r * DPR * a, 0, 7); cx.fill();
+    }
   }
   cx.globalAlpha = 1;
+
+  // the flaming skull rider
+  if (state === S.PLAY || (state === S.DEAD && deadT < .1)){
+    const pr = Math.max(10, H*.016);
+    const ang = Math.atan2(vy * .35, speed * 1000 * 2.2);   // nose follows the velocity
+    drawSkull(px, py, pr * 1.25, ang);
+  }
 
   // score pops
   cx.textAlign = 'center';
@@ -426,20 +537,19 @@ function render(t){
   cx.globalAlpha = 1;
   cx.restore();
 }
-/* debug/testing hook: lets an automated pilot read state (no gameplay effect) */
-window.__dbg = () => state !== S.PLAY ? { state } : {
-  state, py, vy, score,
-  next: (gates.find(g => g.x + g.w*.5 > px - 12) || {}) };
 
-/* ?test=1 → self-play demo: auto-start and pilot toward each gap (verification + attract mode).
-   The pilot DISENGAGES on the first real user input (isTrusted) — human always wins. */
+/* debug/testing hook (no gameplay effect) */
+window.__dbg = () => state !== S.PLAY ? { state } : {
+  state, py, vy, score, next: (gates.find(g => g.x + g.w*.5 > px - 12) || {}) };
+
+/* ?test=1 → self-play demo; disengages on first REAL user input (isTrusted). */
 let testPilot = null;
 if (location.search.includes('test')){
-  setTimeout(()=>{ start();
+  setTimeout(()=>{ start(); tutStep = 3;   // demo pilot bypasses input; hide the tutorial
     testPilot = setInterval(()=>{
-      if (state !== S.PLAY) { start(); return; }
+      if (state !== S.PLAY) { start(); tutStep = 3; return; }
       const g = gates.find(x => x.x + x.w*.5 > px - 12);
-      const target = g ? (g.mode ? (g.gy ?? g.cy) : g.cy) : H*.45;
+      const target = g ? (g.gy ?? g.cy) : H*.45;
       holding = (py + vy*.13) > target;
     }, 40);
   }, 600);
@@ -448,6 +558,7 @@ if (location.search.includes('test')){
   ['keydown','mousedown','touchstart'].forEach(ev => addEventListener(ev, handoff, true));
 }
 
+resize();
 buildBg();
 refreshMenu(false);
 setInterval(()=>{ if (state === S.MENU) dailyEl.textContent = fmtReset(); }, 30000);
