@@ -67,6 +67,13 @@
   <div class="daily" id="daily"></div>
 </div>
 
+<!-- PLATFORM_SDK -->
+<script>
+/* Platform adapter: no-op locally; build script injects a real PSDK
+   (CrazyGames SDK v3 / Poki SDK) above this line for store builds. */
+window.PSDK = window.PSDK || { ready: Promise.resolve(), loaded(){}, start(){}, stop(){},
+                               midgame(){ return Promise.resolve(); } };
+</script>
 <script>
 "use strict";
 /* ============================================================
@@ -274,8 +281,15 @@ function refreshMenu(died){
 function start(){
   try { const a = ac(); a && a.resume && a.resume(); } catch(e){}
   reset(); state = S.PLAY; overlay.classList.add('hidden'); hud.textContent = '0';
+  try { PSDK.start(); } catch(e){}
 }
-['click','touchend'].forEach(ev => btnGo.addEventListener(ev, (e)=>{ e.stopPropagation(); e.preventDefault(); start(); }));
+let adBusy = false;
+['click','touchend'].forEach(ev => btnGo.addEventListener(ev, (e)=>{
+  e.stopPropagation(); e.preventDefault();
+  if (adBusy) return;
+  if (deaths > 0){ adBusy = true; PSDK.midgame().catch(()=>{}).then(()=>{ adBusy = false; start(); }); }
+  else start();
+}));
 window.onerror = (msg)=>{ showToast('⚠ ' + msg); };
 
 btnShare.onclick = async (e)=>{
@@ -287,8 +301,11 @@ btnShare.onclick = async (e)=>{
 function showToast(t){ toast.textContent = t; toast.style.opacity = 1; setTimeout(()=>toast.style.opacity = 0, 2200); }
 
 /* ---------- death ---------- */
+let deaths = 0;
 function die(){
   state = S.DEAD; deadT = 0; slowmo = .25; shake = 22;
+  deaths++;
+  try { PSDK.stop(); } catch(e){}
   sfx.die();
   burst(px, py, 80, '#ff9a3c', H*.9); burst(px, py, 45, '#e8dcc0', H*.6); burst(px, py, 30, '#ff3c00', H*1.2);
   if (tutStep >= 2) localStorage.sd_tut = '1';
@@ -562,6 +579,7 @@ resize();
 buildBg();
 refreshMenu(false);
 setInterval(()=>{ if (state === S.MENU) dailyEl.textContent = fmtReset(); }, 30000);
+PSDK.ready.then(()=>{ try { PSDK.loaded(); } catch(e){} });
 requestAnimationFrame(tick);
 
 /* CrazyGames/Poki SDK hooks land here when we submit:

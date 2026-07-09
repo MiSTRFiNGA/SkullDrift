@@ -1,4 +1,4 @@
-# 🔥 Ember Drift — money runbook
+# 💀 Skull Drift — money runbook
 
 **Game:** one-input arcade, hold to rise. Everyone flies the **identical daily canyon** (UTC-seeded),
 graze the rock for combo bonuses. Zero backend, one file: [index.html](index.html). Original IP.
@@ -9,7 +9,10 @@ The $100K examples (slither.io etc.) are outliers with years of traffic. Strateg
 ship this one, then repeat the pipeline for more games.
 
 ## Status
-- [x] Game built + auto-verified (menu → play → graze bonus → death → results → streak/best persistence)
+- [x] Game built + auto-verified; rethemed SKULL DRIFT (flaming skull, ossuary pillars, tutorial, gentle ramp)
+- [x] Both store SDKs integrated (PSDK adapter) — dist/skulldrift-crazygames.zip + dist/skulldrift-poki.zip
+- [x] Cover art + copy-paste metadata: store/ (SUBMISSION.md)
+- [x] Poki + CrazyGames dev accounts created (Eric, Google login, 2026-07-09)
 - [ ] Eric hand-playtest (difficulty feel — first gates may need widening for casuals)
 - [ ] Deploy free hosting
 - [ ] Submit to platforms
