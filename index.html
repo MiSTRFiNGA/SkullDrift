@@ -74,7 +74,7 @@
 const cv = document.getElementById('game'), cx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 function resize(){
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  DPR = Math.min(window.devicePixelRatio || 1, 1.25);   // perf: shadow-free renderer, low DPR
   W = cv.width  = Math.floor(innerWidth  * DPR);
   H = cv.height = Math.floor(innerHeight * DPR);
   cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
@@ -232,11 +232,14 @@ function refreshMenu(died){
     btnGo.textContent = 'RUN IT BACK';
   }
 }
-btnGo.onclick = (e)=>{ e.stopPropagation(); start(); };
 function start(){
-  ac() && AC.resume && AC.resume();
+  try { const a = ac(); a && a.resume && a.resume(); } catch(e){}   // audio must never block the game
   reset(); state = S.PLAY; overlay.classList.add('hidden'); hud.textContent = '0';
 }
+// bind press AND click so it fires on every browser/touch combo
+['click','touchend'].forEach(ev => btnGo.addEventListener(ev, (e)=>{ e.stopPropagation(); e.preventDefault(); start(); }));
+// surface any runtime error on-screen instead of failing silently
+window.onerror = (msg)=>{ showToast('⚠ ' + msg); };
 btnShare.onclick = async (e)=>{
   e.stopPropagation();
   const txt = `🔥 I scored ${score} on today's Ember Drift canyon — everyone flies the SAME course today. Beat me: ${location.href.split('?')[0]}`;
@@ -365,18 +368,24 @@ function render(t){
   for (const g of gates){
     const gy = (g.mode ? (g.gy ?? g.cy) : g.cy);
     const topH = gy - g.gap*.5, botY = gy + g.gap*.5;
-    cx.save();
-    cx.shadowColor = '#ff5a00'; cx.shadowBlur = 26*DPR;
+    // NO shadowBlur here — it tanked weak GPUs to <1fps ("IGNITE does nothing" bug).
+    // Glow is faked with painted gradient rims instead.
     const rock = cx.createLinearGradient(g.x - g.w, 0, g.x + g.w, 0);
     rock.addColorStop(0, '#3a0d04'); rock.addColorStop(.5, '#7a2a08'); rock.addColorStop(1, '#2c0903');
     cx.fillStyle = rock;
     cx.fillRect(g.x - g.w*.5, -10, g.w, topH + 10);
     cx.fillRect(g.x - g.w*.5, botY, g.w, H - botY + 10);
-    // glowing rims at the gap
+    // faux-glow rims at the gap: hot core + soft gradient falloff
+    const rim = Math.max(3, 4*DPR), soft = rim*4;
+    let gr = cx.createLinearGradient(0, topH - soft, 0, topH);
+    gr.addColorStop(0, 'rgba(255,140,40,0)'); gr.addColorStop(1, 'rgba(255,160,60,.55)');
+    cx.fillStyle = gr; cx.fillRect(g.x - g.w*.5, topH - soft, g.w, soft);
+    gr = cx.createLinearGradient(0, botY, 0, botY + soft);
+    gr.addColorStop(0, 'rgba(255,160,60,.55)'); gr.addColorStop(1, 'rgba(255,140,40,0)');
+    cx.fillStyle = gr; cx.fillRect(g.x - g.w*.5, botY, g.w, soft);
     cx.fillStyle = '#ffb340';
-    cx.fillRect(g.x - g.w*.5, topH - 4*DPR, g.w, 4*DPR);
-    cx.fillRect(g.x - g.w*.5, botY, g.w, 4*DPR);
-    cx.restore();
+    cx.fillRect(g.x - g.w*.5, topH - rim, g.w, rim);
+    cx.fillRect(g.x - g.w*.5, botY, g.w, rim);
   }
 
   if (state !== S.MENU || score > 0){
@@ -391,13 +400,11 @@ function render(t){
     // player ember orb
     if (state === S.PLAY || (state === S.DEAD && deadT < .1)){
       const pr = Math.max(10, H*.016);
-      cx.save();
-      cx.shadowColor = '#ffd080'; cx.shadowBlur = 34*DPR;
-      const og = cx.createRadialGradient(px, py, 0, px, py, pr*1.7);
-      og.addColorStop(0, '#fff8e8'); og.addColorStop(.4, '#ffc65e'); og.addColorStop(1, 'rgba(255,90,10,0)');
-      cx.fillStyle = og; cx.beginPath(); cx.arc(px, py, pr*1.7, 0, 7); cx.fill();
+      // glow = wide radial gradient (cheap), no shadowBlur
+      const og = cx.createRadialGradient(px, py, 0, px, py, pr*2.6);
+      og.addColorStop(0, '#fff8e8'); og.addColorStop(.28, '#ffc65e'); og.addColorStop(1, 'rgba(255,90,10,0)');
+      cx.fillStyle = og; cx.beginPath(); cx.arc(px, py, pr*2.6, 0, 7); cx.fill();
       cx.fillStyle = '#fff3d6'; cx.beginPath(); cx.arc(px, py, pr*.62, 0, 7); cx.fill();
-      cx.restore();
     }
   }
 
@@ -414,9 +421,7 @@ function render(t){
   for (const p of pops){
     cx.globalAlpha = 1 - p.t;
     cx.fillStyle = p.col; cx.font = `bold ${Math.round(H*.032)}px Segoe UI, sans-serif`;
-    cx.shadowColor = p.col; cx.shadowBlur = 14*DPR;
     cx.fillText(p.txt, p.x, p.y - p.t * H*.07);
-    cx.shadowBlur = 0;
   }
   cx.globalAlpha = 1;
   cx.restore();
@@ -425,6 +430,18 @@ function render(t){
 window.__dbg = () => state !== S.PLAY ? { state } : {
   state, py, vy, score,
   next: (gates.find(g => g.x + g.w*.5 > px - 12) || {}) };
+
+/* ?test=1 → self-play demo: auto-start and pilot toward each gap (verification + attract mode) */
+if (location.search.includes('test')){
+  setTimeout(()=>{ start();
+    setInterval(()=>{
+      if (state !== S.PLAY) { start(); return; }
+      const g = gates.find(x => x.x + x.w*.5 > px - 12);
+      const target = g ? (g.mode ? (g.gy ?? g.cy) : g.cy) : H*.45;
+      holding = (py + vy*.13) > target;
+    }, 40);
+  }, 600);
+}
 
 buildBg();
 refreshMenu(false);
