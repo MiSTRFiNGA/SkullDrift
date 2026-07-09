@@ -158,10 +158,13 @@ const PX = () => W * 0.26;
 /* -------- difficulty curve (2026-07-09 retune: gentle on-ramp) --------
    speed: starts slow, ramps with distance.  gaps: wide early, tighten late.
    spacing: generous early. movers only after gate 14. */
-const SPEED0 = () => W * .0014;
-const SPEEDRAMP = () => W * .000016;
-function gapFrac(i){ return Math.max(.165, .36 - i * .0075); }         // .36 → .165 by ~gate 26
-function spacingFrac(i){ return Math.max(.34, .58 - i * .008); }       // .58 → .34
+const SPEED0 = () => W * .0010;                 // slow cruise at launch
+const SPEEDCAP = () => W * .0026;               // max momentum (~2.6x start)
+/* BUGFIX 2026-07-09: old ramp was x1000 too strong (grew ~11x base speed PER SECOND —
+   the "way too fast" complaint). Now speed doubles after ~50s of surviving. */
+const SPEEDRAMP = () => W * .00002;
+function gapFrac(i){ return Math.max(.18, .38 - i * .006); }           // .38 → .18, slower squeeze
+function spacingFrac(i){ return Math.max(.52, .90 - i * .006); }       // .90 → .52 (roomy)
 function moverChance(i){ return i < 14 ? 0 : Math.min(.32, (i-14) * .02); }
 
 function buildBg(){
@@ -249,6 +252,7 @@ function down(e){
   if (e.type === 'keydown' && e.code !== 'Space' && e.code !== 'ArrowUp') return;
   if (e.type === 'keydown' && e.repeat) return;
   if (state === S.PLAY){ holding = true; sfx.flap(); if (tutStep === 0){ tutStep = 1; tutT = 0; } }
+  else if (state === S.MENU && deaths > 0 && e.target !== btnShare){ rideAgain(); }
   e.preventDefault && e.cancelable && e.preventDefault();
 }
 function up(e){ holding = false; if (state === S.PLAY && tutStep === 1){ tutStep = 2; tutT = 0; } }
@@ -274,7 +278,7 @@ function refreshMenu(died){
     resultBlock.classList.remove('hidden'); btnShare.classList.remove('hidden');
     const isBest = score >= st.today && score > 0;
     scoreLine.innerHTML = `You scored <span style="color:#fff;font-size:1.3em">${score}</span>` +
-      (isBest ? ' — 🏆 today\'s best!' : ` · today's best ${st.today}`);
+      (isBest ? ' — 🏆 today\'s best!' : ` · today's best ${st.today}`) + '<div style="font-size:.45em;color:#c9a86a;margin-top:8px">press your rise button to ride again</div>';
     btnGo.textContent = 'RIDE AGAIN';
   }
 }
@@ -284,12 +288,12 @@ function start(){
   try { PSDK.start(); } catch(e){}
 }
 let adBusy = false;
-['click','touchend'].forEach(ev => btnGo.addEventListener(ev, (e)=>{
-  e.stopPropagation(); e.preventDefault();
-  if (adBusy) return;
-  if (deaths > 0){ adBusy = true; PSDK.midgame().catch(()=>{}).then(()=>{ adBusy = false; start(); }); }
+function rideAgain(){
+  if (state !== S.MENU || adBusy) return;
+  if (deaths > 0){ adBusy = true; PSDK.midgame().catch(()=>{}).then(()=>{ adBusy = false; if (state === S.MENU) start(); }); }
   else start();
-}));
+}
+['click','touchend'].forEach(ev => btnGo.addEventListener(ev, (e)=>{ e.stopPropagation(); e.preventDefault(); rideAgain(); }));
 window.onerror = (msg)=>{ showToast('⚠ ' + msg); };
 
 btnShare.onclick = async (e)=>{
@@ -326,7 +330,7 @@ function tick(t){
     vy += (holding ? THRUST() : G()) * dt;
     vy = Math.max(-H*1.05, Math.min(H*1.15, vy));
     py += vy * dt;
-    speed += dt * SPEEDRAMP() * 1000;
+    speed = Math.min(SPEEDCAP(), speed + dt * SPEEDRAMP());
     dist += speed * dt * 1000;
 
     // fire + smoke trail
