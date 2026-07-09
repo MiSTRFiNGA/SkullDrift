@@ -151,8 +151,9 @@ let rng = null, gateIdx = 0;
 let bonePattern = null;
 let tutStep = -1, tutT = 0;      // -1 off · 0 hold · 1 release · 2 graze tip · 3 done
 
-const G = () => H * 1.35;
-const THRUST = () => H * -2.3;
+// 2026-07-09 Eric feel pass: old values were floaty — couldn't react at speed.
+const G = () => H * 2.7;        // fall fast when released
+const THRUST = () => H * -4.8;  // punchy rise on hold
 const PX = () => W * 0.26;
 
 /* -------- difficulty curve (2026-07-09 retune: gentle on-ramp) --------
@@ -328,7 +329,7 @@ function tick(t){
   if (state === S.PLAY){
     runT += dt;
     vy += (holding ? THRUST() : G()) * dt;
-    vy = Math.max(-H*1.05, Math.min(H*1.15, vy));
+    vy = Math.max(-H*1.6, Math.min(H*1.75, vy));
     py += vy * dt;
     speed = Math.min(SPEEDCAP(), speed + dt * SPEEDRAMP());
     dist += speed * dt * 1000;
