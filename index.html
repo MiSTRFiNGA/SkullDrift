@@ -431,16 +431,21 @@ window.__dbg = () => state !== S.PLAY ? { state } : {
   state, py, vy, score,
   next: (gates.find(g => g.x + g.w*.5 > px - 12) || {}) };
 
-/* ?test=1 → self-play demo: auto-start and pilot toward each gap (verification + attract mode) */
+/* ?test=1 → self-play demo: auto-start and pilot toward each gap (verification + attract mode).
+   The pilot DISENGAGES on the first real user input (isTrusted) — human always wins. */
+let testPilot = null;
 if (location.search.includes('test')){
   setTimeout(()=>{ start();
-    setInterval(()=>{
+    testPilot = setInterval(()=>{
       if (state !== S.PLAY) { start(); return; }
       const g = gates.find(x => x.x + x.w*.5 > px - 12);
       const target = g ? (g.mode ? (g.gy ?? g.cy) : g.cy) : H*.45;
       holding = (py + vy*.13) > target;
     }, 40);
   }, 600);
+  const handoff = (e)=>{ if (e.isTrusted && testPilot){ clearInterval(testPilot); testPilot = null;
+    showToast('🎮 You have control'); } };
+  ['keydown','mousedown','touchstart'].forEach(ev => addEventListener(ev, handoff, true));
 }
 
 buildBg();
