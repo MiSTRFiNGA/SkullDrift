@@ -1,9 +1,11 @@
 # 📦 Skull Drift — store submission pack (copy-paste ready)
 
 ## Files
-- CrazyGames upload: `dist/skulldrift-crazygames.zip` (CG SDK v3 integrated)
+- CrazyGames upload: `dist/skulldrift-crazygames.zip` (CG SDK v3 integrated) — CG portal rejects zips, so upload the extracted `dist/index.html` instead
 - Poki upload: `dist/skulldrift-poki.zip` (Poki SDK integrated)
-- Art: `store/cover_16x9.png` (1920×1080) · `cover_4x3.png` (800×600) · `icon_512.png` · `thumb_720.png`
+- Covers (CrazyGames requires all three): `store/cover_16x9.png` (1920×1080 landscape) · `store/cover_2x3_800x1200.png` (portrait) · `store/cover_1x1_800x800.png` (square)
+- Preview videos (CrazyGames requires both): `store/preview_landscape_1080p.mp4` (1920×1080, 15s) · `store/preview_portrait_1080p.mp4` (1080×1920, 15s) — real `?test=1` gameplay, H.264, no audio
+- Extra art: `store/cover_4x3.png` (800×600) · `icon_512.png` · `thumb_720.png`
 
 ## Name
 Skull Drift

@@ -11,8 +11,7 @@
               font-family:'Segoe UI', system-ui, sans-serif; user-select:none; -webkit-user-select:none; }
   #game { display:block; width:100vw; height:100vh; }
   .ui { position:fixed; color:#e8dcc0; text-shadow:0 0 12px #ff8a00, 0 0 30px #c93400; z-index:5; }
-  #hud { top:10px; left:clamp(58px,8vw,92px); font-size:clamp(28px,4.5vw,48px); font-weight:900; letter-spacing:1px; color:#fff1c9;
-         text-shadow:0 0 10px #ffbd38, 0 0 26px #d13c00, 0 0 50px #5b1000; }
+  #hud { top:12px; left:16px; font-size:clamp(18px,3vw,28px); font-weight:700; letter-spacing:1px; }
   #combo { top:12px; left:50%; transform:translateX(-50%); font-size:clamp(14px,2.4vw,22px);
            opacity:0; transition:opacity .2s; font-weight:600; color:#ffe9c0; }
   #mute { top:10px; right:14px; font-size:clamp(20px,3vw,26px); cursor:pointer; opacity:.85; padding:6px 10px;
@@ -68,7 +67,22 @@
   <div class="daily" id="daily"></div>
 </div>
 
-<!-- PLATFORM_SDK -->
+<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+<script>
+window.PSDK = (function(){
+  let sdk = null;
+  const ready = (async()=>{ try { await window.CrazyGames.SDK.init(); sdk = window.CrazyGames.SDK; } catch(e){} })();
+  return {
+    ready,
+    loaded(){ try { sdk && sdk.game.loadingStop && sdk.game.loadingStop(); } catch(e){} },
+    start(){ try { sdk && sdk.game.gameplayStart(); } catch(e){} },
+    stop(){ try { sdk && sdk.game.gameplayStop(); } catch(e){} },
+    midgame(){ return new Promise(res => { if (!sdk) return res();
+      try { sdk.ad.requestAd('midgame', { adFinished: res, adError: res, adStarted(){ } }); }
+      catch(e){ res(); } }); }
+  };
+})();
+</script>
 <script>
 /* Platform adapter: no-op locally; build script injects a real PSDK
    (CrazyGames SDK v3 / Poki SDK) above this line for store builds. */
@@ -119,7 +133,7 @@ function adjacentDay(a, b){ if (!a) return false;
   const pb = Date.UTC(Math.floor(b/10000), Math.floor(b/100)%100 - 1, b%100);
   return pb - pa === 86400000; }
 
-/* ---------- audio ---------- */
+/* ---------- audio (synth, zero assets) ---------- */
 let AC = null, muted = localStorage.sd_mute === '1';
 function ac(){ if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); return AC; }
 function beep(f, dur, type, vol, slide){
@@ -151,28 +165,12 @@ function noise(dur, type, f0, f1, vol){
     src.start(); src.stop(a.currentTime + dur);
   } catch(e){}
 }
-// Local licensed SFX supplied with the game. Clone each playback so rapid pillar passes never cut off a whisper.
-const CLIP_SFX = {
-  ghost: new Audio('sounds/ghost-whisper.mp3'),
-  scary: new Audio('sounds/scary-sound.mp3'),
-  bonecrack: new Audio('sounds/bone-crack.mp3'),
-  expl05: new Audio('sounds/explosion-05.mp3'),
-  expl: new Audio('sounds/explosion.mp3'),
-  coins: new Audio('sounds/clinking-coins.mp3')
-};
-Object.values(CLIP_SFX).forEach(a => { a.preload = 'auto'; a.volume = .24; a.onerror = () => { a._failed = true; }; });
-function playClip(name){
-  if (muted) return;
-  const source = CLIP_SFX[name]; if (!source || source._failed) return;
-  try { const a = source.cloneNode(); a.volume = source.volume; a.play().catch(()=>{}); } catch(e){}
-}
 const sfx = {
   // tap = fire WHOOSH: airy band of noise sweeping up
   flap(){ noise(.22, 'bandpass', 350, 1400, .22); },
   // graze = PSST: fire hit by water — bright hiss dropping fast + a spark ping
   near(c){ noise(.28, 'highpass', 4200, 1200, .30); beep(900 + c*90, .08, 'sine', .05, 1400); },
   gate(){ beep(380, .06, 'square', .022, 460); },
-  scoreLand(){ noise(.13, 'bandpass', 1200, 480, .11); beep(560, .12, 'sine', .07, 720); },
   // death = EXPLOSION: deep boom + rumble + debris hiss
   die(){ noise(.9, 'lowpass', 900, 60, .55); beep(70, .8, 'sine', .3, 24);
          setTimeout(()=>noise(.6, 'highpass', 2500, 500, .12), 60); },
@@ -187,31 +185,27 @@ drawMute();
 const S = { MENU:0, PLAY:1, DEAD:2 };
 let state = S.MENU, holding = false;
 let px, py, vy, dist, speed, score, combo, comboT, shake, slowmo, deadT, runT;
-let gates = [], parts = [], pops = [], scoreFlyers = [], pickups = [], bgSeeds = [];
+let gates = [], parts = [], pops = [], bgSeeds = [];
 let rng = null, gateIdx = 0;
 let bonePattern = null;
 let tutStep = -1, tutT = 0;      // -1 off · 0 hold · 1 release · 2 graze tip · 3 done
 
 // 2026-07-09 Eric feel pass: old values were floaty — couldn't react at speed.
-// difficulty 2026-07-11 (Eric: was too hard): raise the downward force for a crisp,
-// responsive drop AND bump thrust to match so the rise stays punchy. Terminal speeds are
-// clamped LOWER below (vy clamp) so the snappier accel doesn't rocket you into a wall —
-// net effect is faster reaction with a lower top fall speed = more control, not less.
-const G = () => H * 2.7;        // was 2.3 — snappier drop response when released (Eric's lever)
-const THRUST = () => H * -4.8;  // was -4.2 — punchier rise so it always overpowers gravity fast
+const G = () => H * 2.3;        // fall fast when released
+const THRUST = () => H * -4.2;  // punchy rise on hold
 const PX = () => W * 0.26;
 
-/* -------- difficulty curve --------
-   difficulty 2026-07-11 (Eric: was too hard): every knob eased so the NET result is clearly
-   easier — slower calmer launch + gentler speed ramp + lower top speed, wider gaps that shrink
-   slower, more room between pillars, and moving gates delayed & rarer. Raising gravity alone
-   would make a thruster game HARDER (less reaction time), so these carry the real easing. */
-const SPEED0 = () => W * .00070;                // was .00085 — slower, calmer launch cruise
-const SPEEDCAP = () => W * .0022;               // was .0026 — lower top speed (late game less brutal)
-const SPEEDRAMP = () => W * .000012;            // was .00002 — ~40% gentler ramp (~2min to reach cap)
-function gapFrac(i){ return Math.max(.24, .44 - i * .004); }           // was .38→.18 @.006 — now .44→.24 @.004 (wider, squeezes slower)
-function spacingFrac(i){ return Math.max(.60, .98 - i * .005); }       // was .90→.52 — now .98→.60 (roomier gaps between pillars)
-function moverChance(i){ return i < 30 ? 0 : Math.min(.20, (i-30) * .012); } // was gate22/.28cap — movers now start later & top out rarer
+/* -------- difficulty curve (2026-07-09 retune: gentle on-ramp) --------
+   speed: starts slow, ramps with distance.  gaps: wide early, tighten late.
+   spacing: generous early. movers only after gate 14. */
+const SPEED0 = () => W * .00085;                // slow cruise at launch
+const SPEEDCAP = () => W * .0026;               // max momentum (~2.6x start)
+/* BUGFIX 2026-07-09: old ramp was x1000 too strong (grew ~11x base speed PER SECOND —
+   the "way too fast" complaint). Now speed doubles after ~50s of surviving. */
+const SPEEDRAMP = () => W * .00002;
+function gapFrac(i){ return Math.max(.18, .38 - i * .006); }           // .38 → .18, slower squeeze
+function spacingFrac(i){ return Math.max(.52, .90 - i * .006); }       // .90 → .52 (roomy)
+function moverChance(i){ return i < 22 ? 0 : Math.min(.28, (i-22) * .015); }
 
 function buildBg(){
   bgSeeds = [];
@@ -260,7 +254,7 @@ function makeBonePattern(){
 
 function reset(){
   rng = mulberry32(utcDayKey());
-  gates = []; parts = []; pops = []; scoreFlyers = []; pickups = [];
+  gates = []; parts = []; pops = [];
   gateIdx = 0;
   px = PX(); py = H * .45; vy = 0;
   dist = 0; speed = SPEED0(); score = 0; combo = 0; comboT = 0;
@@ -281,11 +275,6 @@ function spawnGate(){
   const amp = mode ? H * (.04 + rng()*.08) : 0;
   const ph = rng() * Math.PI * 2;
   gates.push({ x, cy, gap, i, mode, amp, ph, w: Math.max(30, W*.034), scored:false, nearDone:false });
-  // Relics hang in the open lane between towers: a rare, visible route-choice bonus.
-  if (i > 0 && rng() < .42){
-    const prev = gates[gates.length-2], laneY = H*(.18 + rng()*.64);
-    pickups.push({ x:(prev.x+x)*.5, y:laneY, value:rng() < .22 ? 50 : 25, kind:rng() < .5 ? 0 : 1, spin:rng()*7 });
-  }
 }
 
 /* ---------- particles ---------- */
@@ -296,14 +285,6 @@ function burst(x, y, n, col, sp){
   }
 }
 function pop(x, y, txt, col){ pops.push({ x, y, txt, col, t: 0 }); }
-function scoreTarget(){
-  const cr = cv.getBoundingClientRect(), hr = hud.getBoundingClientRect();
-  return { x:(hr.left + hr.width*.5 - cr.left) * DPR, y:(hr.top + hr.height*.5 - cr.top) * DPR };
-}
-function scoreFly(x, y, value, sound='scary', arrivalSound=null){
-  scoreFlyers.push({ sx:x, sy:y, x, y, t:0, value, arrivalSound });
-  playClip(sound);
-}
 
 /* ---------- input ---------- */
 function down(e){
@@ -349,8 +330,7 @@ function start(){
 let adBusy = false;
 function rideAgain(){
   if (state !== S.MENU || adBusy) return;
-  if (deaths > 0){ adBusy = true; const wasMuted = muted; muted = true;   // silence SFX during the ad
-    PSDK.midgame().catch(()=>{}).then(()=>{ muted = wasMuted; adBusy = false; if (state === S.MENU) start(); }); }
+  if (deaths > 0){ adBusy = true; PSDK.midgame().catch(()=>{}).then(()=>{ adBusy = false; if (state === S.MENU) start(); }); }
   else start();
 }
 ['click','touchend'].forEach(ev => btnGo.addEventListener(ev, (e)=>{ e.stopPropagation(); e.preventDefault(); rideAgain(); }));
@@ -371,7 +351,6 @@ function die(){
   deaths++;
   try { PSDK.stop(); } catch(e){}
   sfx.die();
-  ['bonecrack','expl05','expl'].forEach(playClip);
   burst(px, py, 80, '#ff9a3c', H*.9); burst(px, py, 45, '#e8dcc0', H*.6); burst(px, py, 30, '#ff3c00', H*1.2);
   if (tutStep >= 2) localStorage.sd_tut = '1';
   const st = store.load();
@@ -389,9 +368,7 @@ function tick(t){
   if (state === S.PLAY){
     runT += dt;
     vy += (holding ? THRUST() : G()) * dt;
-    // difficulty 2026-07-11 (Eric: was too hard): cap FALL speed lower (1.75→1.5) so there's
-    // more reaction time near the floor, and lift cap a touch (1.6→1.7) for crisp rise.
-    vy = Math.max(-H*1.7, Math.min(H*1.5, vy));
+    vy = Math.max(-H*1.6, Math.min(H*1.75, vy));
     py += vy * dt;
     speed = Math.min(SPEEDCAP(), speed + dt * SPEEDRAMP());
     dist += speed * dt * 1000;
@@ -404,20 +381,11 @@ function tick(t){
 
     const sc = speed * dt * 1000;
     for (const g of gates) g.x -= sc;
-    for (let i=pickups.length-1; i>=0; i--){
-      const p = pickups[i]; p.x -= sc; p.spin += dt*4;
-      if (p.x < -H*.08){ pickups.splice(i,1); continue; }
-      if (Math.hypot(p.x-px, p.y-py) < H*.050){
-        score += p.value; scoreFly(p.x, p.y, p.value, 'coins', 'coins'); burst(p.x,p.y,18,'#c8f5c3',H*.38); pickups.splice(i,1);
-      }
-    }
     if (gates[0] && gates[0].x < -W*.2){ gates.shift(); spawnGate(); }
 
     if (py < H*.03 + 6 || py > H*.97 - 6){ die(); }
 
-    // difficulty 2026-07-11 (Eric: was too hard): smaller collision radius (.016→.013) than the
-    // drawn skull (pr*1.25) = more forgiving hitbox; grazes still register within pr*1.6.
-    const pr = Math.max(8, H*.013);
+    const pr = Math.max(10, H*.016);
     for (const g of gates){
       const gy = g.mode ? g.cy + Math.sin(g.ph + t*.0016) * g.amp : g.cy;
       g.gy = gy;
@@ -429,23 +397,22 @@ function tick(t){
           const d = Math.min(py - pr - topEdge, botEdge - (py + pr));
           if (d < pr*1.6){
             g.nearDone = true; combo++; comboT = 2;
-            const mult = Math.min(16, 2 ** (combo-1));
-            const bonus = 10 * mult;
+            const bonus = combo;
             score += bonus;
             sfx.near(Math.min(combo,6));
             burst(px, py + (py - gy > 0 ? pr : -pr), 12, '#ffe08a', H*.35);
-            pop(px, py - H*.05, `+${bonus} GRAZE ×${mult}`, '#ffe08a');
+            pop(px, py - H*.05, `+${bonus} GRAZE${combo>1 ? ' x'+combo : ''}`, '#ffe08a');
           }
         }
       }
       if (!g.scored && g.x + g.w*.5 < px - pr){
-        g.scored = true; score += 10; playClip('ghost');
-        scoreFly(px, py - H*.06, 10);
+        g.scored = true; score++; sfx.gate();
         if (!g.nearDone){ combo = 0; }
+        hud.textContent = score;
       }
     }
     if (comboT > 0){ comboT -= dt; comboEl.style.opacity = 1;
-      comboEl.textContent = combo > 1 ? `🔥 GRAZE MULTIPLIER ×${Math.min(16,2 ** (combo-1))}` : '✨ GRAZE ×1';
+      comboEl.textContent = combo > 1 ? `🔥 GRAZE CHAIN x${combo}` : '✨ graze!';
     } else comboEl.style.opacity = 0;
 
     // tutorial text
@@ -470,23 +437,6 @@ function tick(t){
     if (p.kind === 2) p.vy -= H*.12*dt;         // smoke rises
     if (p.t > p.life) parts.splice(i,1); }
   for (let i = pops.length-1; i >= 0; i--){ const p = pops[i]; p.t += dt; if (p.t > 1) pops.splice(i,1); }
-  for (let i = scoreFlyers.length-1; i >= 0; i--){
-    const f = scoreFlyers[i]; f.t += dt;
-    if (f.t >= .85){
-      const target = scoreTarget();
-      burst(target.x, target.y, 12, '#ffd873', H*.20); sfx.scoreLand(); shake = Math.max(shake, 3);
-      if (f.arrivalSound) playClip(f.arrivalSound);
-      hud.textContent = score; scoreFlyers.splice(i,1); continue;
-    }
-    const target = scoreTarget();
-    if (f.t < .26){ f.x = f.sx; f.y = f.sy; }
-    else {
-      const u = (f.t-.26)/.59, e = u*u*u, m = 1-e;
-      const mx = (f.sx + target.x)*.5, my = Math.min(f.sy, target.y) - H*.10;
-      f.x = m*m*f.sx + 2*m*e*mx + e*e*target.x;
-      f.y = m*m*f.sy + 2*m*e*my + e*e*target.y;
-    }
-  }
   if (shake > 0) shake = Math.max(0, shake - rawDt*40);
 
   render(t);
@@ -586,15 +536,6 @@ function render(t){
     cx.fillRect(-g.w*.5, -10, g.w, topH + 10);
     cx.fillRect(-g.w*.5, botY, g.w, H - botY + 10);
     cx.restore();
-    // Stacked ossuary details: crossbones and skull niches make each tower read as a bone monument.
-    cx.strokeStyle = 'rgba(239,222,181,.34)'; cx.fillStyle = 'rgba(223,208,170,.48)'; cx.lineWidth = Math.max(1,DPR*1.5);
-    const ornament = (yy) => { if (yy < 18 || yy > H-18) return;
-      cx.beginPath(); cx.moveTo(g.x-g.w*.25,yy-H*.018); cx.lineTo(g.x+g.w*.25,yy+H*.018); cx.moveTo(g.x-g.w*.25,yy+H*.018); cx.lineTo(g.x+g.w*.25,yy-H*.018); cx.stroke();
-      cx.beginPath(); cx.arc(g.x,yy-H*.038,Math.max(3,g.w*.13),0,7); cx.fill();
-      cx.fillStyle='rgba(25,17,19,.7)'; cx.beginPath(); cx.arc(g.x-g.w*.05,yy-H*.043,Math.max(1,g.w*.028),0,7); cx.fill(); cx.beginPath(); cx.arc(g.x+g.w*.05,yy-H*.043,Math.max(1,g.w*.028),0,7); cx.fill(); cx.fillStyle='rgba(223,208,170,.48)';
-    };
-    for(let yy=H*.10; yy<topH-H*.05; yy+=H*.14) ornament(yy);
-    for(let yy=botY+H*.08; yy<H-H*.05; yy+=H*.14) ornament(yy);
     // edge shading for depth
     const es = cx.createLinearGradient(x0, 0, x0 + g.w, 0);
     es.addColorStop(0, 'rgba(0,0,0,.45)'); es.addColorStop(.5, 'rgba(0,0,0,0)'); es.addColorStop(1, 'rgba(0,0,0,.45)');
@@ -646,8 +587,6 @@ function render(t){
     const ang = Math.atan2(vy * .35, speed * 1000 * 2.2);   // nose follows the velocity
     drawSkull(px, py, pr * 1.25, ang);
   }
-  // Score portrait uses the same rendered flaming skull as the playable rider.
-  if (state === S.PLAY) drawSkull(Math.max(24,H*.040), Math.max(26,H*.047), Math.max(10,H*.017), 0);
 
   // score pops
   cx.textAlign = 'center';
@@ -655,33 +594,6 @@ function render(t){
     cx.globalAlpha = 1 - p.t;
     cx.fillStyle = p.col; cx.font = `bold ${Math.round(H*.032)}px Segoe UI, sans-serif`;
     cx.fillText(p.txt, p.x, p.y - p.t * H*.07);
-  }
-
-  // Floating relic pickups: spinning coins or ember skulls, deliberately visible between pillars.
-  for (const p of pickups){
-    const r = H*.025*(1+.10*Math.sin(p.spin));
-    cx.save(); cx.translate(p.x,p.y); cx.rotate(Math.sin(p.spin)*.16);
-    cx.shadowColor='#baf7b4'; cx.shadowBlur=16*DPR;
-    if (p.kind){
-      const squish=.52+.48*Math.abs(Math.sin(p.spin)); cx.scale(squish,1);
-      cx.fillStyle='#ffd26e'; cx.beginPath(); cx.arc(0,0,r,0,7); cx.fill(); cx.strokeStyle='#a96312'; cx.lineWidth=Math.max(2,DPR*2); cx.stroke();
-      cx.fillStyle='#fff1aa'; cx.font=`900 ${Math.round(r*1.1)}px Segoe UI`; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText('☠',0,1);
-    } else {
-      cx.fillStyle='#e8ead0'; cx.beginPath(); cx.arc(0,-r*.12,r,0,7); cx.fill(); cx.fillRect(-r*.55,r*.35,r*1.1,r*.38);
-      cx.shadowBlur=0; cx.fillStyle='#24151b'; cx.beginPath(); cx.arc(-r*.35,-r*.18,r*.18,0,7); cx.fill(); cx.beginPath(); cx.arc(r*.35,-r*.18,r*.18,0,7); cx.fill();
-    }
-    cx.fillStyle='#fff1b8'; cx.font=`900 ${Math.round(H*.022)}px Segoe UI`; cx.textAlign='center'; cx.fillText('+'+p.value,0,-r*1.7); cx.restore();
-  }
-  // Pillar rewards: a large, bright +10 flashes at the skull before flying to the HUD.
-  for (const f of scoreFlyers){
-    const u = Math.min(1, f.t/.26), scale = f.t < .26 ? (.45 + u*1.05) : 1.45;
-    const alpha = f.t < .26 ? 1 : Math.max(.2, 1 - Math.max(0, f.t-.70)*5);
-    cx.save(); cx.translate(f.x, f.y); cx.globalAlpha = alpha;
-    cx.font = `900 ${Math.round(H*.065*scale)}px Segoe UI, sans-serif`;
-    cx.textAlign = 'center'; cx.textBaseline = 'middle';
-    cx.shadowColor = '#ff5a16'; cx.shadowBlur = 18*DPR;
-    cx.lineWidth = Math.max(3, 3*DPR); cx.strokeStyle = 'rgba(45,10,0,.9)'; cx.strokeText('+' + f.value, 0, 0);
-    cx.fillStyle = '#fff1bf'; cx.fillText('+' + f.value, 0, 0); cx.restore();
   }
   cx.globalAlpha = 1;
   cx.restore();

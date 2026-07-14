@@ -36,9 +36,21 @@ window.PSDK = (function(){
 src = open('index.html', encoding='utf-8').read()
 assert '<!-- PLATFORM_SDK -->' in src, 'marker missing'
 os.makedirs('dist', exist_ok=True)
+
+# Bundle the licensed SFX the game references (sounds/*.mp3). index.html falls back to
+# synth audio if a clip is missing, but ship the real ones so store builds sound right.
+def add_dir(z, folder):
+    if not os.path.isdir(folder):
+        return
+    for root, _, files in os.walk(folder):
+        for f in files:
+            p = os.path.join(root, f)
+            z.write(p, os.path.relpath(p, '.').replace('\\', '/'))
+
 for name, snippet in (('crazygames', CG), ('poki', POKI)):
     html = src.replace('<!-- PLATFORM_SDK -->', snippet, 1)
     out = f'dist/skulldrift-{name}.zip'
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
         z.writestr('index.html', html)
+        add_dir(z, 'sounds')
     print(out, os.path.getsize(out), 'bytes')
