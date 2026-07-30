@@ -1,0 +1,16 @@
+{
+  "name": "Skull Drift — everyone rides the same catacomb today",
+  "short_name": "Skull Drift",
+  "description": "One button. A flaming skull hurtling through an endless ossuary. Everyone on Earth rides the identical catacomb today — beat your friends before midnight resets it.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "background_color": "#0b0a0d",
+  "theme_color": "#1a0f08",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "./assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./assets/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

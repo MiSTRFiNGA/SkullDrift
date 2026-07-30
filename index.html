@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Skull Drift — everyone rides the same catacomb today</title>
 <meta name="description" content="One button. A flaming skull hurtling through an endless ossuary. Everyone on Earth rides the identical catacomb today — beat your friends before midnight resets it.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Skull Drift">
+<meta name="theme-color" content="#1a0f08">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body { width:100%; height:100%; overflow:hidden; background:#0b0a0d; touch-action:none;
@@ -717,6 +723,18 @@ requestAnimationFrame(tick);
 /* CrazyGames/Poki SDK hooks land here when we submit:
    - sdk.gameplayStart() in start(), sdk.gameplayStop() in die()
    - rewarded ad = "second chance" continue (one per run)          */
+</script>
+
+<!-- PWA offline shell. Guarded so it can never throw/break startup when this file is
+     served flat inside a CrazyGames/Poki portal iframe (no https, no SW support, etc). -->
+<script>
+try {
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+} catch (e) {}
 </script>
 </body>
 </html>
