@@ -87,6 +87,11 @@ window.PSDK = window.PSDK || { ready: Promise.resolve(), loaded(){}, start(){}, 
    SKULL DRIFT — one-input daily-catacomb arcade.
    No backend. Daily seed = UTC date: whole world, same course.
    ============================================================ */
+/* Build version. Added 2026-08-05: this game had NO version string, so a shipped APK could not be
+   matched back to a commit. Numbering rule: 0.0.X = alpha, 0.X.X = beta, X.X.X = full release.
+   Demoted 1.0 -> 0.1.0 because the portal REJECTED this build — it is not a full release.
+   Bump sw.js CACHE_VERSION whenever this changes or the service worker serves the old build. */
+const GAME_VERSION = '0.1.0';
 const cv = document.getElementById('game'), cx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 function resize(){

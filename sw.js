@@ -2,7 +2,7 @@
 // first load fetches from network and stores a copy; every load after that
 // (including offline) is served from cache. Bump CACHE_VERSION to force a
 // refresh of the shell on the next visit.
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `skulldrift-shell-${CACHE_VERSION}`;
 const PRECACHE_URLS = ['./', './index.html', './manifest.webmanifest'];
 
